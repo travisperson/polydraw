@@ -20,246 +20,248 @@
 			<canvas id="map"></canvas>
 		</div>
 		<script>
-			//
-			// A few helper functions
-			//
+			(function() {
 
-			// Simple square
-			function sqr(a) {
-				return a * a;
-			}
+				//
+				// A few helper functions
+				//
 
-			// Determine if  
-			function onPoint(a, b, r) {
-				return sqr(a.x - b.x) + sqr(a.y - b.y) < sqr(r);
-			}
-
-			// Simple constant
-			RADIUS = 5;
-			FPS    = 20;
-
-			// Grab our canvas
-			var canvas = document.getElementById("map");
-				canvas.width = window.innerWidth;
-				canvas.height = window.innerHeight;
-
-			// Pull the 2d drawing context
-			var cxt = canvas.getContext("2d");
-
-			// Our set of polygons
-			var polygons = [{points:[]}]
-
-			// Reference to the current polygon
-			var current_gon = polygons[0]
-
-			// Keep track of our mouse, default to off screen
-			var mouse = {x:-10,y:-10};
-
-			// The last point we were dealing with
-			var lastPoint = null;
-
-			// Tells the drawing to ignore a few statments or not
-			// This is to make sure we fill in polygons
-			var ignore = false;
-
-			// Keeping track of track state
-			var dragPoint_index = null;
-			var dragPoint       = null;
-
-			// Keeping track of alt mod
-			var alt = false;
-
-			// Event listern to fire every time we click on the canvas
-			canvas.addEventListener('click', function (e) {
-				// Make a point to work with
-				var p = {x:e.offsetX, y:e.offsetY}
-
-				// For shorter variables and reduced reference jumps
-				var points = current_gon.points
-				// Run through the current polygons points
-				for ( var i = 0; i < points.length; i++ )
-				{
-
-					// If the current drag point is this point just skip it, don't care to check anything
-					// with it.
-					if ( dragPoint_index == i ) continue;
-
-					// determine if we are ontop of an already existing point
-					if (onPoint(points[i], p, RADIUS))
-					{
-
-						// If the alt key is selected we want to be able to move points around
-						if ( alt == true )
-						{
-							dragPoint_index = i;
-							dragPoint = points[i];
-							return;
-						}
-
-						// Make sure we don't place a point on an already existing points
-						// except for the first one
-						if (!onPoint(points[0], p, RADIUS))
-						{
-							return console.log("There is already and point there");
-						}
-
-						// Polygons have to have at least 3 points
-						if (points.length < 3)
-						{
-							return console.log("You must draw at least 3 points to have a polygon");
-						}
-						
-						// If we are on the first point, then we have completed our polygon
-
-						// Generare a new poly gone
-						polygons.push({points:[]})
-
-						// Set current gon to the new polygon
-						current_gon = polygons[polygons.length-1]
-
-						// Null out the last point so we don't draw lines between it and our cursor
-						lastPoint = null;
-
-						return
-					}
+				// Simple square
+				function sqr(a) {
+					return a * a;
 				}
 
-				// If we get here allow the user to place the drag
-				// be removing references to any point
-				if ( dragPoint_index != null )
-				{
-					dragPoint_index = null;
-					dragPoint       = null;
-					return;
+				// Determine if  
+				function onPoint(a, b, r) {
+					return sqr(a.x - b.x) + sqr(a.y - b.y) < sqr(r);
 				}
 
-				// If the alt mod is enable, we won't place any points
-				if ( alt ) return;
+				// Simple constant
+				RADIUS = 5;
+				FPS    = 20;
 
-				// Set last point so we will draw lines between it and our mouse position
-				lastPoint = p
+				// Grab our canvas
+				var canvas = document.getElementById("map");
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
 
-				// Push the newly created point onto the array of points
-				current_gon.points.push(p);
-			}, false);
-			
-			// Update our mouse position
-			canvas.addEventListener('mousemove', function(e) {
-				mouse.x = event.offsetX;
-				mouse.y = event.offsetY;
-			}, false);
+				// Pull the 2d drawing context
+				var cxt = canvas.getContext("2d");
 
-			window.addEventListener('keydown', function (e) {
-				if ( e.altKey == true )
-				{
-					alt = true;
-				}
-			}, false)
+				// Our set of polygons
+				var polygons = [{points:[]}]
 
-			window.addEventListener('keyup', function (e) {
-				if ( e.altKey == false )
-				{
-					alt = false;
-				}
-			}, false)
+				// Reference to the current polygon
+				var current_gon = polygons[0]
 
-			// Draw the canvas
-			setInterval(function () {
-				// A clear hack
-				canvas.width = canvas.width;
-				
-				// Draw a line between the last point and our mouse
-				if ( alt == false && lastPoint != null && dragPoint_index == null )
-				{
-					cxt.beginPath();
-					cxt.strokeStyle = '#000000';
-					cxt.moveTo(lastPoint.x, lastPoint.y);
-					cxt.lineTo(mouse.x, mouse.y);
-					cxt.stroke();
-				}
-	
-				// Loop over all the polygons and draw them
-				for ( var x = 0; x < polygons.length; x++ )
-				{
-					// Faster access
-					points = polygons[x].points;
+				// Keep track of our mouse, default to off screen
+				var mouse = {x:-10,y:-10};
 
-					// No points, don't draw
-					if ( points.length == 0 ) continue;
+				// The last point we were dealing with
+				var lastPoint = null;
 
-					// If we are on the last point we want to show what it will draw like
-					// So we will ignore a check a little futher down
-					// Also make sure they have a least 3 points
-					if ( points.length > 2 && onPoint(points[0], mouse, RADIUS) && alt == false && dragPoint_index === null)
-						ignore = true;
-					else
-						ignore = false;
+				// Tells the drawing to ignore a few statments or not
+				// This is to make sure we fill in polygons
+				var ignore = false;
 
-					// Setup some drawing styles
-					cxt.beginPath();
-					cxt.fillStyle = "rgba(0, 255, 0, 0.5)"
-					cxt.lineWidth = 2;
-					cxt.strokeStyle = '#003300';
+				// Keeping track of track state
+				var dragPoint_index = null;
+				var dragPoint       = null;
 
-					// Set the drawing point to the first point
-					if ( x == (polygons.length - 1) && dragPoint_index !== null && 0 === dragPoint_index )
-					{
-						points[0].x = mouse.x;
-						points[0].y = mouse.y;
-					}
+				// Keeping track of alt mod
+				var alt = false;
 
-					cxt.moveTo(points[0].x, points[0].y);
+				// Event listern to fire every time we click on the canvas
+				canvas.addEventListener('click', function (e) {
+					// Make a point to work with
+					var p = {x:e.offsetX, y:e.offsetY}
 
-					// Draw a line to the next point
-					for ( var i = 1; i < points.length; i++ )
-					{
-						if ( x == (polygons.length - 1) && dragPoint_index !== null && i === dragPoint_index )
-						{
-							points[i].x = mouse.x;
-							points[i].y = mouse.y;
-						}
-
-						cxt.lineTo(points[i].x, points[i].y);
-					}
-
-					// Only draw the last path line and fill if we are a complete poly, or
-					// if we set the ignore tag to simulate a complete poly
-					if ( ignore || points.length >= 3 && polygons[x] !== current_gon )
-					{
-						cxt.closePath();
-						cxt.fill();
-					}
-
-					// Draw it all
-					cxt.stroke();
-
-					// Draw little circles at every line intersection
+					// For shorter variables and reduced reference jumps
+					var points = current_gon.points
+					// Run through the current polygons points
 					for ( var i = 0; i < points.length; i++ )
 					{
+
+						// If the current drag point is this point just skip it, don't care to check anything
+						// with it.
+						if ( dragPoint_index == i ) continue;
+
+						// determine if we are ontop of an already existing point
+						if (onPoint(points[i], p, RADIUS))
+						{
+
+							// If the alt key is selected we want to be able to move points around
+							if ( alt == true )
+							{
+								dragPoint_index = i;
+								dragPoint = points[i];
+								return;
+							}
+
+							// Make sure we don't place a point on an already existing points
+							// except for the first one
+							if (!onPoint(points[0], p, RADIUS))
+							{
+								return console.log("There is already and point there");
+							}
+
+							// Polygons have to have at least 3 points
+							if (points.length < 3)
+							{
+								return console.log("You must draw at least 3 points to have a polygon");
+							}
+							
+							// If we are on the first point, then we have completed our polygon
+
+							// Generare a new poly gone
+							polygons.push({points:[]})
+
+							// Set current gon to the new polygon
+							current_gon = polygons[polygons.length-1]
+
+							// Null out the last point so we don't draw lines between it and our cursor
+							lastPoint = null;
+
+							return
+						}
+					}
+
+					// If we get here allow the user to place the drag
+					// be removing references to any point
+					if ( dragPoint_index != null )
+					{
+						dragPoint_index = null;
+						dragPoint       = null;
+						return;
+					}
+
+					// If the alt mod is enable, we won't place any points
+					if ( alt ) return;
+
+					// Set last point so we will draw lines between it and our mouse position
+					lastPoint = p
+
+					// Push the newly created point onto the array of points
+					current_gon.points.push(p);
+				}, false);
+				
+				// Update our mouse position
+				canvas.addEventListener('mousemove', function(e) {
+					mouse.x = event.offsetX;
+					mouse.y = event.offsetY;
+				}, false);
+
+				window.addEventListener('keydown', function (e) {
+					if ( e.altKey == true )
+					{
+						alt = true;
+					}
+				}, false)
+
+				window.addEventListener('keyup', function (e) {
+					if ( e.altKey == false )
+					{
+						alt = false;
+					}
+				}, false)
+
+				// Draw the canvas
+				setInterval(function () {
+					// A clear hack
+					canvas.width = canvas.width;
+					
+					// Draw a line between the last point and our mouse
+					if ( alt == false && lastPoint != null && dragPoint_index == null )
+					{
 						cxt.beginPath();
-						cxt.arc(points[i].x, points[i].y, RADIUS, 0, 2 * Math.PI, false);
-						cxt.fillStyle = '#00FF00';
-						cxt.fill();
-						cxt.lineWidth = 1;
-						cxt.strokeStyle = '#003300';
+						cxt.strokeStyle = '#000000';
+						cxt.moveTo(lastPoint.x, lastPoint.y);
+						cxt.lineTo(mouse.x, mouse.y);
 						cxt.stroke();
 					}
-	
-				}
+		
+					// Loop over all the polygons and draw them
+					for ( var x = 0; x < polygons.length; x++ )
+					{
+						// Faster access
+						points = polygons[x].points;
 
-				// Finally draw the mouse cursor ball
-				if ( dragPoint_index == null )	
-				{
-					cxt.beginPath();
-					cxt.arc(mouse.x, mouse.y, RADIUS, 0, 2 * Math.PI, false);
-					cxt.fillStyle = '#FF0000';
-					cxt.fill();
-					cxt.lineWidth = 1;
-					cxt.strokeStyle = '#330000';
-					cxt.stroke();
-				}
-			}, FPS/1000);
+						// No points, don't draw
+						if ( points.length == 0 ) continue;
 
+						// If we are on the last point we want to show what it will draw like
+						// So we will ignore a check a little futher down
+						// Also make sure they have a least 3 points
+						if ( points.length > 2 && onPoint(points[0], mouse, RADIUS) && alt == false && dragPoint_index === null)
+							ignore = true;
+						else
+							ignore = false;
+
+						// Setup some drawing styles
+						cxt.beginPath();
+						cxt.fillStyle = "rgba(0, 255, 0, 0.5)"
+						cxt.lineWidth = 2;
+						cxt.strokeStyle = '#003300';
+
+						// Set the drawing point to the first point
+						if ( x == (polygons.length - 1) && dragPoint_index !== null && 0 === dragPoint_index )
+						{
+							points[0].x = mouse.x;
+							points[0].y = mouse.y;
+						}
+
+						cxt.moveTo(points[0].x, points[0].y);
+
+						// Draw a line to the next point
+						for ( var i = 1; i < points.length; i++ )
+						{
+							if ( x == (polygons.length - 1) && dragPoint_index !== null && i === dragPoint_index )
+							{
+								points[i].x = mouse.x;
+								points[i].y = mouse.y;
+							}
+
+							cxt.lineTo(points[i].x, points[i].y);
+						}
+
+						// Only draw the last path line and fill if we are a complete poly, or
+						// if we set the ignore tag to simulate a complete poly
+						if ( ignore || points.length >= 3 && polygons[x] !== current_gon )
+						{
+							cxt.closePath();
+							cxt.fill();
+						}
+
+						// Draw it all
+						cxt.stroke();
+
+						// Draw little circles at every line intersection
+						for ( var i = 0; i < points.length; i++ )
+						{
+							cxt.beginPath();
+							cxt.arc(points[i].x, points[i].y, RADIUS, 0, 2 * Math.PI, false);
+							cxt.fillStyle = '#00FF00';
+							cxt.fill();
+							cxt.lineWidth = 1;
+							cxt.strokeStyle = '#003300';
+							cxt.stroke();
+						}
+		
+					}
+
+					// Finally draw the mouse cursor ball
+					if ( dragPoint_index == null )	
+					{
+						cxt.beginPath();
+						cxt.arc(mouse.x, mouse.y, RADIUS, 0, 2 * Math.PI, false);
+						cxt.fillStyle = '#FF0000';
+						cxt.fill();
+						cxt.lineWidth = 1;
+						cxt.strokeStyle = '#330000';
+						cxt.stroke();
+					}
+				}, FPS/1000);
+		})();
 		</script>
 	</body>
 </html>
