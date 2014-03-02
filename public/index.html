@@ -82,6 +82,12 @@
 						{
 							return console.log("There is already and point there");
 						}
+
+						// Polygons have to have at least 3 points
+						If (points.length < 3)
+						{
+							return console.log("You must draw at least 3 points to have a polygon");
+						}
 						
 						// If we are on the first point, then we have completed our polygon
 
@@ -137,7 +143,8 @@
 
 					// If we are on the last point we want to show what it will draw like
 					// So we will ignore a check a little futher down
-					if (onPoint(points[0], mouse, RADIUS))
+					// Also make sure they have a least 3 points
+					if ( points.length > 2 && onPoint(points[0], mouse, RADIUS))
 						ignore = true;
 					else
 						ignore = false;
