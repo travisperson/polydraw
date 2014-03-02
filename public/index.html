@@ -62,20 +62,40 @@
 			// This is to make sure we fill in polygons
 			var ignore = false;
 
+			// Keeping track of track state
+			var dragPoint_index = null;
+			var dragPoint       = null;
+
+			// Keeping track of alt mod
+			var alt = false;
+
 			// Event listern to fire every time we click on the canvas
 			canvas.addEventListener('click', function (e) {
 				// Make a point to work with
 				var p = {x:e.offsetX, y:e.offsetY}
 
+				// For shorter variables and reduced reference jumps
+				var points = current_gon.points
 				// Run through the current polygons points
-				for ( var i = 0; i < current_gon.points.length; i++ )
+				for ( var i = 0; i < points.length; i++ )
 				{
-					// For shorter variables and reduced reference jumps
-					var points = current_gon.points
+
+					// If the current drag point is this point just skip it, don't care to check anything
+					// with it.
+					if ( dragPoint_index == i ) continue;
 
 					// determine if we are ontop of an already existing point
 					if (onPoint(points[i], p, RADIUS))
 					{
+
+						// If the alt key is selected we want to be able to move points around
+						if ( alt == true )
+						{
+							dragPoint_index = i;
+							dragPoint = points[i];
+							return;
+						}
+
 						// Make sure we don't place a point on an already existing points
 						// except for the first one
 						if (!onPoint(points[0], p, RADIUS))
@@ -104,6 +124,18 @@
 					}
 				}
 
+				// If we get here allow the user to place the drag
+				// be removing references to any point
+				if ( dragPoint_index != null )
+				{
+					dragPoint_index = null;
+					dragPoint       = null;
+					return;
+				}
+
+				// If the alt mod is enable, we won't place any points
+				if ( alt ) return;
+
 				// Set last point so we will draw lines between it and our mouse position
 				lastPoint = p
 
@@ -117,13 +149,27 @@
 				mouse.y = event.offsetY;
 			}, false);
 
+			window.addEventListener('keydown', function (e) {
+				if ( e.altKey == true )
+				{
+					alt = true;
+				}
+			}, false)
+
+			window.addEventListener('keyup', function (e) {
+				if ( e.altKey == false )
+				{
+					alt = false;
+				}
+			}, false)
+
 			// Draw the canvas
 			setInterval(function () {
 				// A clear hack
 				canvas.width = canvas.width;
 				
 				// Draw a line between the last point and our mouse
-				if ( lastPoint != null )
+				if ( alt == false && lastPoint != null && dragPoint_index == null )
 				{
 					cxt.beginPath();
 					cxt.strokeStyle = '#000000';
@@ -144,7 +190,7 @@
 					// If we are on the last point we want to show what it will draw like
 					// So we will ignore a check a little futher down
 					// Also make sure they have a least 3 points
-					if ( points.length > 2 && onPoint(points[0], mouse, RADIUS))
+					if ( points.length > 2 && onPoint(points[0], mouse, RADIUS) && alt == false && dragPoint_index === null)
 						ignore = true;
 					else
 						ignore = false;
@@ -156,11 +202,25 @@
 					cxt.strokeStyle = '#003300';
 
 					// Set the drawing point to the first point
+					if ( x == (polygons.length - 1) && dragPoint_index !== null && 0 === dragPoint_index )
+					{
+						points[0].x = mouse.x;
+						points[0].y = mouse.y;
+					}
+
 					cxt.moveTo(points[0].x, points[0].y);
 
 					// Draw a line to the next point
 					for ( var i = 1; i < points.length; i++ )
+					{
+						if ( x == (polygons.length - 1) && dragPoint_index !== null && i === dragPoint_index )
+						{
+							points[i].x = mouse.x;
+							points[i].y = mouse.y;
+						}
+
 						cxt.lineTo(points[i].x, points[i].y);
+					}
 
 					// Only draw the last path line and fill if we are a complete poly, or
 					// if we set the ignore tag to simulate a complete poly
@@ -188,13 +248,16 @@
 				}
 
 				// Finally draw the mouse cursor ball
-				cxt.beginPath();
-				cxt.arc(mouse.x, mouse.y, RADIUS, 0, 2 * Math.PI, false);
-				cxt.fillStyle = '#FF0000';
-				cxt.fill();
-				cxt.lineWidth = 1;
-				cxt.strokeStyle = '#330000';
-				cxt.stroke();
+				if ( dragPoint_index == null )	
+				{
+					cxt.beginPath();
+					cxt.arc(mouse.x, mouse.y, RADIUS, 0, 2 * Math.PI, false);
+					cxt.fillStyle = '#FF0000';
+					cxt.fill();
+					cxt.lineWidth = 1;
+					cxt.strokeStyle = '#330000';
+					cxt.stroke();
+				}
 			}, FPS/1000);
 
 		</script>
