@@ -126,6 +126,30 @@
 						}
 					}
 
+					// To makee things neat, we are going to allow the user to
+					// place points on top of other poly points.
+					for ( var x = 0; x < polygons.length - 1; x++ )
+					{
+						var points = polygons[x].points
+
+						for ( var i = 0; i < points.length; i++ )
+						{
+							if (onPoint(points[i], p, RADIUS))
+							{
+								console.log("Place on same point")
+								p.x = points[i].x
+								p.y = points[i].y
+
+								// get out early
+								break;
+							}
+						}
+
+						// if we broke out early on the last, we can break here as well
+						if ( i != points.length ) break;
+
+					}
+
 					// If we get here allow the user to place the drag
 					// be removing references to any point
 					if ( dragPoint_index != null )
